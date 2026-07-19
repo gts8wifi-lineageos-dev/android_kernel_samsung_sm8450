@@ -1742,6 +1742,9 @@ static int qcom_socinfo_probe(struct platform_device *pdev)
 	qs->attr.revision = devm_kasprintf(&pdev->dev, GFP_KERNEL, "%u.%u",
 					   SOCINFO_MAJOR(le32_to_cpu(info->ver)),
 					   SOCINFO_MINOR(le32_to_cpu(info->ver)));
+	if (!qs->attr.soc_id || !qs->attr.revision)
+		return -ENOMEM;
+
 	qs->attr.soc_id = kasprintf(GFP_KERNEL, "%d", socinfo_get_id());
 
 	if (socinfo_format >= SOCINFO_VERSION(0, 16)) {
@@ -1751,6 +1754,12 @@ static int qcom_socinfo_probe(struct platform_device *pdev)
 			sku = devm_kasprintf(&pdev->dev, GFP_KERNEL, "%s-%u-%s",
 				machine, socinfo_get_nproduct_code(), esku);
 	}
+
+	/*
+	 * Do not set attr.serial_number here: socinfo_populate_sysfs() below
+	 * already exposes serial_number on the same soc device, and letting
+	 * soc_device_register() create it as well fails probe with -EEXIST.
+	 */
 
 	qsocinfo = qs;
 	init_rwsem(&qs->current_image_rwsem);

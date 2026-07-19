@@ -1576,6 +1576,7 @@ static void qcom_slim_ngd_notify_slaves(struct qcom_slim_ngd_ctrl *ctrl)
 
 		if (slim_get_logical_addr(sbdev))
 			dev_err(ctrl->dev, "Failed to get logical address\n");
+		put_device(&sbdev->dev);
 	}
 }
 
@@ -2060,12 +2061,18 @@ static int qcom_slim_ngd_ctrl_probe(struct platform_device *pdev)
 	}
 
 	ret = devm_request_irq(dev, ctrl->irq, qcom_slim_ngd_interrupt,
-			       IRQF_TRIGGER_HIGH, "slim-ngd", ctrl);
+			       IRQF_TRIGGER_HIGH | IRQF_NO_AUTOEN,
+			       "slim-ngd", ctrl);
 	if (ret) {
 		dev_err(&pdev->dev, "request IRQ failed\n");
 		return ret;
 	}
-	ctrl->irq_disabled = false;
+	/*
+	 * IRQF_NO_AUTOEN leaves the interrupt disabled until the NGD is
+	 * registered, so the state tracked by qcom_slim_ngd_{enable,disable}_irq()
+	 * has to start out matching that.
+	 */
+	ctrl->irq_disabled = true;
 
 	ctrl->wait_for_adsp_up = of_property_read_bool(pdev->dev.of_node,
 					"qcom,wait_for_adsp_up");
@@ -2160,6 +2167,9 @@ static int qcom_slim_ngd_ctrl_probe(struct platform_device *pdev)
 	}
 
 	platform_driver_register(&qcom_slim_ngd_driver);
+
+	qcom_slim_ngd_enable_irq(ctrl);
+
 	SLIM_INFO(ctrl, "NGD SB controller is up!\n");
 	return 0;
 
