@@ -1,16 +1,11 @@
-gts8wifi-base-dtbs := ../../../vendor/qcom/waipio-v2.dtb ../../../vendor/qcom/waipio.dtb \
-	../../../vendor/qcom/waipiop-v2.dtb ../../../vendor/qcom/waipiop.dtb
-
 dtbo-y += gts8wifi_chn_open_w00_r08.dtbo # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
-gts8wifi_chn_open_w00_r08.dtbo-base := $(gts8wifi-base-dtbs) # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 dtbo-y += gts8wifi_chn_open_w00_r07.dtbo # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
-gts8wifi_chn_open_w00_r07.dtbo-base := $(gts8wifi-base-dtbs) # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 dtbo-y += gts8wifi_chn_open_w00_r06.dtbo # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
-gts8wifi_chn_open_w00_r06.dtbo-base := $(gts8wifi-base-dtbs) # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 dtbo-y += gts8wifi_chn_open_w00_r05.dtbo # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
-gts8wifi_chn_open_w00_r05.dtbo-base := $(gts8wifi-base-dtbs) # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 dtbo-y += gts8wifi_chn_open_w00_r04.dtbo # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
-gts8wifi_chn_open_w00_r04.dtbo-base := $(gts8wifi-base-dtbs) # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
+
+always-$(CONFIG_BUILD_ARM64_DT_OVERLAY) += $(dtbo-y)
+
 # SPDX-License-Identifier: GPL-2.0
 
 #define __sec_dtbo_build
