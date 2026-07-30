@@ -1726,7 +1726,7 @@ static int nvt_regulator_init(struct nvt_ts_data *ts)
 			 __func__, "panel_buck_en");
 		return PTR_ERR(ts->regulator_panel_buck_en);
 	}
-	
+
 	ts->regulator_panel_reset = regulator_get(NULL, ts->platdata->regulator_panel_reset);
 	if (IS_ERR(ts->regulator_panel_reset)) {
 		input_err(true, &ts->client->dev, "%s: Failed to get %s regulator.\n",
@@ -1845,6 +1845,23 @@ static int nvt_ts_input_notify_call(struct notifier_block *n, unsigned long data
 	return ret;
 }
 #endif
+
+#if IS_ENABLED(CONFIG_SEC_PANEL_NOTIFIER)
+static int nvt_ts_ss_panel_notify_call(struct notifier_block *n, unsigned long event, void *v)
+{
+	struct nvt_ts_data *ts = container_of(n, struct nvt_ts_data, ss_panel_nb);
+	struct panel_state_data *sdata = v;
+
+	if (event != PANEL_EVENT_STATE_CHANGED || sdata->state != PANEL_OFF)
+		return 0;
+
+	input_info(true, &ts->client->dev, "%s: panel off\n", __func__);
+	nvt_ts_close(ts);
+
+	return 0;
+}
+#endif
+
 static int nvt_ts_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
 	struct nvt_ts_data *ts;
@@ -1995,6 +2012,11 @@ static int nvt_ts_probe(struct i2c_client *client, const struct i2c_device_id *i
 	sec_input_register_notify(&ts->nvt_input_nb, nvt_ts_input_notify_call, 1);
 #endif
 
+#if IS_ENABLED(CONFIG_SEC_PANEL_NOTIFIER)
+	ts->ss_panel_nb.notifier_call = nvt_ts_ss_panel_notify_call;
+	ss_panel_notifier_register(&ts->ss_panel_nb);
+#endif
+
 	schedule_delayed_work(&ts->work_read_info, msecs_to_jiffies(50));
 
 	input_err(true, &client->dev, "initialization is done\n");
@@ -2050,6 +2072,10 @@ static void nvt_ts_shutdown(struct i2c_client *client)
 	if (client->irq)
 		free_irq(client->irq, ts);
 
+#if IS_ENABLED(CONFIG_SEC_PANEL_NOTIFIER)
+	ss_panel_notifier_unregister(&ts->ss_panel_nb);
+#endif
+
 #if IS_ENABLED(CONFIG_INPUT_SEC_NOTIFIER)
 	sec_input_unregister_notify(&ts->nvt_input_nb);
 #endif
@@ -2068,6 +2094,10 @@ static void nvt_ts_shutdown(struct i2c_client *client)
 static int nvt_ts_remove(struct i2c_client *client)
 {
 	struct nvt_ts_data *ts = i2c_get_clientdata(client);
+
+#if IS_ENABLED(CONFIG_SEC_PANEL_NOTIFIER)
+	ss_panel_notifier_unregister(&ts->ss_panel_nb);
+#endif
 
 #if IS_ENABLED(CONFIG_INPUT_SEC_NOTIFIER)
 	sec_input_unregister_notify(&ts->nvt_input_nb);

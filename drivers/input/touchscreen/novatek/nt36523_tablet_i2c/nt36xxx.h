@@ -30,6 +30,10 @@
 #include <../../../sec_input/sec_input.h>
 #include <linux/firmware.h>
 
+#if IS_ENABLED(CONFIG_SEC_PANEL_NOTIFIER)
+#include <../../../../sec_panel_notifier/sec_panel_notifier.h>
+#endif
+
 #include "nt36xxx_mem_map.h"
 
 //---I2C driver info.---
@@ -188,6 +192,9 @@ struct nvt_ts_data {
 
 #if IS_ENABLED(CONFIG_INPUT_SEC_NOTIFIER)
 	struct notifier_block nvt_input_nb;
+#endif
+#if IS_ENABLED(CONFIG_SEC_PANEL_NOTIFIER)
+	struct notifier_block ss_panel_nb;
 #endif
 	struct regulator *regulator_panel_ldo_en;
 	struct regulator *regulator_panel_buck_en;
